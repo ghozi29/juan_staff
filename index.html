@@ -205,7 +205,7 @@
   }
 
   function loadData() {
-  database.ref('api')
+  database.ref('database')
     .orderByChild('createdAt')
     .once('value', snapshot => {
       const dataArr = [];
