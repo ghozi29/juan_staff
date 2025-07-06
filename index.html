@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -156,12 +156,12 @@
           <td>${start + i + 1}</td>
           <td>${item.nama || '-'}</td>
           <td>Rp ${formatRupiah(item.harga)}</td>
-          <td>${item.jumlah}</td>
-          <td>${item.berat}</td>
-          <td>${item.layanan}</td>
-          <td>${item.tanggal}</td>
-          <td>${item.tanggalPengambilan}</td>
-          <td>${item.code}</td>
+          <td>${item.jumlah || '0'}</td>
+          <td>${item.berat || '0'}</td>
+          <td>${item.layanan || '-'}</td>
+          <td>${item.tanggal || '-'}</td>
+          <td>${item.tanggalPengambilan || '-'}</td>
+          <td>${item.code || '-'}</td>
           <td>
             <select class="status-dropdown" data-id="${item.key}">
               <option value="On Proses" ${item.status === 'On Proses' ? 'selected' : ''}>On Proses</option>
@@ -190,15 +190,14 @@
   }
 
   function loadData() {
-    db.once('value', snapshot => {
+    db.orderByChild("createdAt").once('value', snapshot => {
       allData = [];
       snapshot.forEach(child => {
         const val = child.val();
         val.key = child.key;
-        allData.push(val);
+        allData.unshift(val); // Tambahkan data terbaru ke depan
       });
-      allData.reverse();
-      renderTable(currentPage);
+      renderTable(currentPage = 1);
     });
   }
 
