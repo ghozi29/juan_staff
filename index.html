@@ -236,7 +236,7 @@
 
     if (!confirm('Yakin ingin menghapus data ini?')) return;
 
-    database.ref('api/' + key).remove()
+    database.ref('database/' + key).remove()
       .then(() => {
         alert('Data berhasil dihapus!');
         loadData();
@@ -252,7 +252,7 @@
     const key = $(this).data('id');
     const newStatus = $(this).val();
 
-    database.ref('api/' + key).update({ status: newStatus })
+    database.ref('database/' + key).update({ status: newStatus })
       .then(() => {
         console.log('Status diperbarui:', newStatus);
       })
