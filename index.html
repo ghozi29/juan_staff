@@ -7,9 +7,9 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
     }
 
     .container {
@@ -17,7 +17,7 @@
       margin: 50px auto;
       background-color: white;
       padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       border-radius: 8px;
     }
 
@@ -34,12 +34,13 @@
 
     th, td {
       padding: 12px;
+      border: 1px solid #ccc;
       text-align: center;
-      border: 1px solid #000000;
     }
 
     th {
       background-color: #3efa41;
+      color: #000;
     }
 
     .delete-button {
@@ -55,32 +56,25 @@
       background-color: darkred;
     }
 
-    .error-message {
-      color: red;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    select.status-dropdown {
+    .status-dropdown {
       padding: 5px;
       border-radius: 5px;
-      border: 1px solid #ccc;
     }
 
     #pagination-controls {
-      margin-top: 15px;
       text-align: center;
+      margin-top: 20px;
     }
 
     #pagination-controls button {
-      margin: 0 3px;
-      padding: 5px 10px;
-      cursor: pointer;
+      padding: 6px 10px;
+      margin: 2px;
       border-radius: 5px;
       border: 1px solid #3efa41;
       background-color: white;
       color: #3efa41;
       font-weight: bold;
+      cursor: pointer;
     }
 
     #pagination-controls button.active {
@@ -89,53 +83,38 @@
     }
   </style>
 
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-  <!-- Firebase SDKs -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
 <div class="container">
   <h1>Website Staff Data Pelanggan Laundry</h1>
-  <div class="error-message" id="error-message" style="display:none;">
-    Gagal menghapus data. Silakan cek konsol.
-  </div>
-
   <table id="laundryTable">
     <thead>
       <tr>
         <th>No</th>
         <th>Nama</th>
-        <th>Harga (Rupiah)</th>
-        <th>Jumlah (PCS)</th>
-        <th>Berat (KG)</th>
+        <th>Harga</th>
+        <th>Jumlah</th>
+        <th>Berat</th>
         <th>Layanan</th>
         <th>Tanggal Masuk</th>
         <th>Tanggal Selesai</th>
-        <th>Kode Transaksi</th>
+        <th>Kode</th>
         <th>Status</th>
         <th>Aksi</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Data akan diisi dinamis -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
   <div id="pagination-controls"></div>
 </div>
 
 <script>
-  // Fungsi format angka menjadi format Rupiah
-  function formatRupiah(angka) {
-    if (!angka) return '0';
-    return parseInt(angka).toLocaleString('id-ID');
-  }
-
-  // Konfigurasi Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyA0nLjuJd1cah3yHkcWLNvmqPA5cAnSOjI",
     authDomain: "tongsampah1-a.firebaseapp.com",
@@ -143,43 +122,46 @@
     projectId: "tongsampah1-a",
     storageBucket: "tongsampah1-a.appspot.com",
     messagingSenderId: "631897766480",
-    appId: "1:631897766480:web:b12b5adc1f1d48d20f2f55",
-    measurementId: "G-4S53LK3D6X"
+    appId: "1:631897766480:web:b12b5adc1f1d48d20f2f55"
   };
 
-  // Inisialisasi Firebase
   firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+  const db = firebase.database().ref("databasee");
 
   let allData = [];
-  const pageSize = 10;
   let currentPage = 1;
+  const pageSize = 10;
 
-  function renderTablePage(page = 1) {
-    const tableBody = $('#laundryTable tbody');
-    tableBody.empty();
+  function formatRupiah(angka) {
+    if (!angka) return '0';
+    return parseInt(angka).toLocaleString('id-ID');
+  }
+
+  function renderTable(page = 1) {
+    const tbody = $('#laundryTable tbody');
+    tbody.empty();
 
     const start = (page - 1) * pageSize;
-    const end = start + pageSize;
+    const end = Math.min(start + pageSize, allData.length);
     const pageData = allData.slice(start, end);
 
     if (pageData.length === 0) {
-      tableBody.append('<tr><td colspan="11">Tidak ada data</td></tr>');
+      tbody.append('<tr><td colspan="11">Data tidak ditemukan</td></tr>');
       return;
     }
 
-    pageData.forEach((item, index) => {
-      const row = `
+    pageData.forEach((item, i) => {
+      tbody.append(`
         <tr>
-          <td>${start + index + 1}</td>
-          <td>${item.nama || 'N/A'}</td>
-          <td>Rp ${formatRupiah(item.harga) || 'N/A'}</td>
-          <td>${item.jumlah || 'N/A'}</td>
-          <td>${item.berat || 'N/A'}</td>
-          <td>${item.layanan || 'N/A'}</td>
-          <td>${item.tanggal || 'N/A'}</td>
-          <td>${item.tanggalPengambilan || 'N/A'}</td>
-          <td>${item.code || 'N/A'}</td>
+          <td>${start + i + 1}</td>
+          <td>${item.nama || '-'}</td>
+          <td>Rp ${formatRupiah(item.harga)}</td>
+          <td>${item.jumlah}</td>
+          <td>${item.berat}</td>
+          <td>${item.layanan}</td>
+          <td>${item.tanggal}</td>
+          <td>${item.tanggalPengambilan}</td>
+          <td>${item.code}</td>
           <td>
             <select class="status-dropdown" data-id="${item.key}">
               <option value="On Proses" ${item.status === 'On Proses' ? 'selected' : ''}>On Proses</option>
@@ -187,10 +169,9 @@
               <option value="Sudah Diambil" ${item.status === 'Sudah Diambil' ? 'selected' : ''}>Sudah Diambil</option>
             </select>
           </td>
-          <td><button class="delete-button" data-id="${item.key}">Delete</button></td>
+          <td><button class="delete-button" data-id="${item.key}">Hapus</button></td>
         </tr>
-      `;
-      tableBody.append(row);
+      `);
     });
 
     renderPagination();
@@ -198,70 +179,54 @@
 
   function renderPagination() {
     const totalPages = Math.ceil(allData.length / pageSize);
-    let paginationHtml = '';
+    let buttons = "";
 
     for (let i = 1; i <= totalPages; i++) {
-      const startNum = (i - 1) * pageSize + 1;
-      const endNum = Math.min(i * pageSize, allData.length);
-      const activeClass = (i === currentPage) ? 'active' : '';
-      paginationHtml += `<button class="pagination-btn ${activeClass}" data-page="${i}">${startNum}-${endNum}</button>`;
+      const isActive = i === currentPage ? "active" : "";
+      buttons += `<button class="${isActive}" data-page="${i}">${i}</button>`;
     }
 
-    $('#pagination-controls').html(paginationHtml);
+    $('#pagination-controls').html(buttons);
   }
 
   function loadData() {
-    database.ref('database')
-      .orderByChild('createdAt')
-      .once('value', snapshot => {
-        const dataArr = [];
-        snapshot.forEach(childSnapshot => {
-          const item = childSnapshot.val();
-          item.key = childSnapshot.key;
-          dataArr.push(item);
-        });
-        allData = dataArr.reverse();
-        currentPage = 1;
-        renderTablePage(currentPage);
-      })
-      .catch(error => console.error('Load gagal:', error));
+    db.once('value', snapshot => {
+      allData = [];
+      snapshot.forEach(child => {
+        const val = child.val();
+        val.key = child.key;
+        allData.push(val);
+      });
+      allData.reverse();
+      renderTable(currentPage);
+    });
   }
 
-  // Event tombol pagination
-  $(document).on('click', '.pagination-btn', function () {
-    const page = parseInt($(this).data('page'));
-    if (page === currentPage) return;
-    currentPage = page;
-    renderTablePage(currentPage);
+  // Pagination click
+  $(document).on('click', '#pagination-controls button', function () {
+    currentPage = parseInt($(this).data('page'));
+    renderTable(currentPage);
   });
 
-  // Event hapus data
-  $('#laundryTable').on('click', '.delete-button', function () {
-    const key = $(this).data('id');
-    if (!confirm('Yakin ingin menghapus data ini?')) return;
-    database.ref('database/' + key).remove()
-      .then(() => {
-        alert('Data berhasil dihapus!');
-        loadData();
-      })
-      .catch(error => {
-        console.error('Gagal hapus data:', error);
-        $('#error-message').show();
-      });
-  });
-
-  // Event update status
-  $('#laundryTable').on('change', '.status-dropdown', function () {
+  // Update status
+  $(document).on('change', '.status-dropdown', function () {
     const key = $(this).data('id');
     const newStatus = $(this).val();
-    database.ref('database/' + key).update({ status: newStatus })
+    db.child(key).child('status').set(newStatus)
+      .then(() => console.log("✅ Status diperbarui"))
+      .catch(err => alert("❌ Gagal update status: " + err));
+  });
+
+  // Delete data
+  $(document).on('click', '.delete-button', function () {
+    const key = $(this).data('id');
+    if (!confirm("Yakin hapus data ini?")) return;
+    db.child(key).remove()
       .then(() => {
-        console.log('Status diperbarui:', newStatus);
+        alert("✅ Data berhasil dihapus");
+        loadData();
       })
-      .catch(error => {
-        console.error('Gagal memperbarui status:', error);
-        alert('Gagal memperbarui status.');
-      });
+      .catch(err => alert("❌ Gagal hapus: " + err));
   });
 
   $(document).ready(() => {
