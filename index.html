@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WEBSITE STAFF DATA PELANGGAN LAUNDRY</title>
+  <title>Login Staff Laundry</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,18 +12,43 @@
       padding: 0;
     }
 
-    .container {
+    .login-container, .container {
       width: 90%;
-      margin: 50px auto;
+      max-width: 400px;
+      margin: 80px auto;
       background-color: white;
-      padding: 20px;
+      padding: 30px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       border-radius: 8px;
+      display: none;
     }
 
-    h1 {
+    h1, h2 {
       text-align: center;
       color: #333;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #3efa41;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #34c938;
     }
 
     table {
@@ -90,7 +115,16 @@
 </head>
 <body>
 
-<div class="container">
+<!-- Login Form -->
+<div class="login-container" id="login-container">
+  <h2>Login Staff Laundry</h2>
+  <input type="text" id="username" placeholder="ID Staff">
+  <input type="password" id="password" placeholder="Password">
+  <button id="login-button">Login</button>
+</div>
+
+<!-- Main Container -->
+<div class="container" id="main-container">
   <h1>Website Staff Data Pelanggan Laundry</h1>
   <table id="laundryTable">
     <thead>
@@ -110,7 +144,6 @@
     </thead>
     <tbody></tbody>
   </table>
-
   <div id="pagination-controls"></div>
 </div>
 
@@ -126,7 +159,9 @@
   };
 
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.database().ref("databasee");
+  const db = firebase.database();
+  const akunRef = db.ref("akun_staff");
+  const dataRef = db.ref("databasee");
 
   let allData = [];
   let currentPage = 1;
@@ -137,13 +172,13 @@
     return parseInt(angka).toLocaleString('id-ID');
   }
 
-  function renderTable(page = 1) {
+  function renderTable(page = 1, data = allData) {
     const tbody = $('#laundryTable tbody');
     tbody.empty();
 
     const start = (page - 1) * pageSize;
-    const end = Math.min(start + pageSize, allData.length);
-    const pageData = allData.slice(start, end);
+    const end = Math.min(start + pageSize, data.length);
+    const pageData = data.slice(start, end);
 
     if (pageData.length === 0) {
       tbody.append('<tr><td colspan="11">Data tidak ditemukan</td></tr>');
@@ -174,11 +209,11 @@
       `);
     });
 
-    renderPagination();
+    renderPagination(data);
   }
 
-  function renderPagination() {
-    const totalPages = Math.ceil(allData.length / pageSize);
+  function renderPagination(data = allData) {
+    const totalPages = Math.ceil(data.length / pageSize);
     let buttons = "";
 
     for (let i = 1; i <= totalPages; i++) {
@@ -190,37 +225,34 @@
   }
 
   function loadData() {
-    db.orderByChild("createdAt").once('value', snapshot => {
+    dataRef.orderByChild("createdAt").once('value', snapshot => {
       allData = [];
       snapshot.forEach(child => {
         const val = child.val();
         val.key = child.key;
-        allData.unshift(val); // Tambahkan data terbaru ke depan
+        allData.unshift(val);
       });
       renderTable(currentPage = 1);
     });
   }
 
-  // Pagination click
   $(document).on('click', '#pagination-controls button', function () {
     currentPage = parseInt($(this).data('page'));
     renderTable(currentPage);
   });
 
-  // Update status
   $(document).on('change', '.status-dropdown', function () {
     const key = $(this).data('id');
     const newStatus = $(this).val();
-    db.child(key).child('status').set(newStatus)
+    dataRef.child(key).child('status').set(newStatus)
       .then(() => console.log("✅ Status diperbarui"))
       .catch(err => alert("❌ Gagal update status: " + err));
   });
 
-  // Delete data
   $(document).on('click', '.delete-button', function () {
     const key = $(this).data('id');
     if (!confirm("Yakin hapus data ini?")) return;
-    db.child(key).remove()
+    dataRef.child(key).remove()
       .then(() => {
         alert("✅ Data berhasil dihapus");
         loadData();
@@ -228,8 +260,31 @@
       .catch(err => alert("❌ Gagal hapus: " + err));
   });
 
+  // LOGIN LOGIC
   $(document).ready(() => {
-    loadData();
+    $('#login-container').show();
+
+    $('#login-button').click(function () {
+      const username = $('#username').val().trim();
+      const password = $('#password').val().trim();
+
+      if (!username || !password) {
+        alert("Harap isi semua kolom!");
+        return;
+      }
+
+      akunRef.child(username).once('value', snapshot => {
+        const data = snapshot.val();
+        if (data && data.password === password) {
+          alert("✅ Login berhasil!");
+          $('#login-container').hide();
+          $('#main-container').show();
+          loadData();
+        } else {
+          alert("❌ ID atau Password salah!");
+        }
+      });
+    });
   });
 </script>
 
