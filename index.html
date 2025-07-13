@@ -108,10 +108,12 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const akunRef = db.ref("akun_staff");
+  const tokenRef = db.ref("juan_staff/otentikasi");
 
   $(document).ready(() => {
     $('#login-container').show();
 
+    // Login
     $('#login-button').click(() => {
       const username = $('#username').val().trim();
       const password = $('#password').val().trim();
@@ -133,12 +135,47 @@
       });
     });
 
+    // Ganti ke form Ganti Password
+    $('#to-change-password').click(() => {
+      $('#login-container').hide();
+      $('#change-password-container').show();
+    });
+
+    // Kembali ke Login
+    $('#cp-back').click(() => {
+      $('#change-password-container').hide();
+      $('#login-container').show();
+    });
+
+    // Logout
     $('#logout-button').click(() => {
       if (confirm("Yakin ingin logout?")) {
         $('#main-container').hide();
         $('#login-container').show();
         $('#username, #password').val('');
       }
+    });
+
+    // ✅ Event Delegation untuk Ganti Password
+    $(document).on('click', '#cp-submit', () => {
+      console.log("🔐 Tombol Ganti Password diklik");
+
+      const username = $('#cp-username').val().trim();
+      const token = $('#cp-token').val().trim();
+      const newPassword = $('#cp-new-password').val().trim();
+
+      if (!username || !token || !newPassword) {
+        alert("Harap isi semua kolom!");
+        return;
+      }
+
+      akunRef.child(username).once('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) {
+          alert("❌ ID Staff tidak ditemukan.");
+          return;
+        }
+      });
     });
   });
 </script>
