@@ -12,7 +12,7 @@
       padding: 0;
     }
 
-    .login-container, .container {
+    .login-container {
       width: 90%;
       max-width: 400px;
       margin: 80px auto;
@@ -24,8 +24,15 @@
     }
 
     .container {
+      width: 95%;
       max-width: 1200px;
+      margin: 30px auto;
+      background-color: white;
       padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      display: none;
+      overflow-x: auto;
     }
 
     h1, h2 {
@@ -59,7 +66,6 @@
     .top-bar {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 10px;
     }
 
     .logout-button {
@@ -79,7 +85,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      margin-top: 15px;
       min-width: 800px;
     }
 
@@ -138,7 +144,7 @@
       }
     }
   </style>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
@@ -165,8 +171,10 @@
 
 <!-- Main Container -->
 <div class="container" id="main-container">
+  <div class="top-bar">
+    <button class="logout-button" id="logout-button">Logout</button>
+  </div>
   <h1>Website Staff Data Pelanggan Laundry</h1>
-  <button id="logout-button" style="margin-bottom: 20px;">Logout</button>
   <table id="laundryTable">
     <thead>
       <tr>
@@ -228,7 +236,7 @@
     }
 
     pageData.forEach((item, i) => {
-      tbody.append(
+      tbody.append(`
         <tr>
           <td>${start + i + 1}</td>
           <td>${item.nama || '-'}</td>
@@ -248,7 +256,7 @@
           </td>
           <td><button class="delete-button" data-id="${item.key}">Hapus</button></td>
         </tr>
-      );
+      `);
     });
 
     renderPagination(data);
@@ -260,7 +268,7 @@
 
     for (let i = 1; i <= totalPages; i++) {
       const isActive = i === currentPage ? "active" : "";
-      buttons += <button class="${isActive}" data-page="${i}">${i}</button>;
+      buttons += `<button class="${isActive}" data-page="${i}">${i}</button>`;
     }
 
     $('#pagination-controls').html(buttons);
@@ -335,19 +343,16 @@
         .catch(err => alert("❌ Gagal hapus: " + err));
     });
 
-    // Navigasi ke ganti password
     $('#to-change-password').click(() => {
       $('#login-container').hide();
       $('#change-password-container').show();
     });
 
-    // Kembali ke login
     $('#cp-back').click(() => {
       $('#change-password-container').hide();
       $('#login-container').show();
     });
 
-    // Ganti password logic
     $('#cp-submit').click(() => {
       const username = $('#cp-username').val().trim();
       const token = $('#cp-token').val().trim();
