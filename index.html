@@ -371,20 +371,23 @@
         }
 
         tokenRef.once('value', snap => {
-          const kodeAsli = snap.val();
-          if (token === kodeAsli) {
-            akunRef.child(username).child("password").set(newPassword)
-              .then(() => {
-                alert("✅ Password berhasil diganti!");
-                $('#change-password-container').hide();
-                $('#login-container').show();
-                $('#cp-username, #cp-token, #cp-new-password').val('');
-              })
-              .catch(err => alert("❌ Gagal mengganti password: " + err));
-          } else {
-            alert("❌ Kode otentikasi salah!");
-          }
-        });
+  const kodeAsli = snap.val(); // "admin"
+  console.log("Token input:", token);
+  console.log("Token Firebase:", kodeAsli);
+
+  if (token.trim() === kodeAsli.trim()) {
+    akunRef.child(username).child("password").set(newPassword)
+      .then(() => {
+        alert("✅ Password berhasil diganti!");
+        $('#change-password-container').hide();
+        $('#login-container').show();
+        $('#cp-username, #cp-token, #cp-new-password').val('');
+      })
+      .catch(err => alert("❌ Gagal mengganti password: " + err));
+  } else {
+    alert("❌ Kode otentikasi salah!");
+  }
+});
       });
     });
   });
